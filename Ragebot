@@ -1,337 +1,164 @@
--- === NOSKILL HUB | ULTIMATE LIQUID GLASS V8 PREMIUM - BYPASS EDITION ===
-local function BypassAntiCheat()
-    local Targets = {"Anti", "Security", "Detection", "Watchdog", "Check", "Ban", "Flag", "Monitor", "Kick", "Report"}
-    for _, obj in pairs(game:GetDescendants()) do
-        if obj:IsA("Script") or obj:IsA("LocalScript") then
-            for _, name in pairs(Targets) do
-                if string.find(obj.Name, name) or string.find(string.lower(obj.Name), string.lower(name)) then
-                    obj.Disabled = true
-                    pcall(function() obj:Destroy() end)
-                end
-            end
-        end
-    end
+-- Fly + Noclip Script
+-- Executable in Delta
 
-    local mt = getrawmetatable(game)
-    setreadonly(mt, false)
-    local oldnc = mt.__namecall
-    
-    mt.__namecall = newcclosure(function(self, ...)
-        local method = getnamecallmethod()
-        local args = {...}
-        
-        if method == "FireServer" then
-            local strself = tostring(self)
-            if string.find(strself, "Kick") or string.find(strself, "Report") or string.find(strself, "Ban") then
-                return
-            end
-        end
-        
-        return oldnc(self, ...)
-    end)
-    setreadonly(mt, true)
-end
+local Players = game:Service("Players")
+local RunService = game:Service("RunService")
+local LocalPlayer = Players.LocalPlayer
 
-BypassAntiCheat()
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local FlyBtn = Instance.new("TextButton")
+local NoclipBtn = Instance.new("TextButton")
+local SpeedInput = Instance.new("TextBox")
+local CloseBtn = Instance.new("TextButton")
+local OpenBtn = Instance.new("TextButton")
 
-loadstring(game:HttpGet("https://pastefy.app/YiGY38uo/raw"))()
+ScreenGui.Name = "SkySystem"
+ScreenGui.Parent = game:CoreGui
+ScreenGui.ResetOnSpawn = false
 
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local CoreGui = game:GetService("CoreGui")
-local Workspace = game:GetService("Workspace")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.Position = UDim2.new(0.5, -100, 0.5, -75)
+MainFrame.Size = UDim2.new(0, 200, 0, 160)
+MainFrame.Active = true
+MainFrame.Draggable = true
 
-local lp = Players.LocalPlayer
-local cam = Workspace.CurrentCamera
+Title.Name = "Title"
+Title.Parent = MainFrame
+Title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Font = Enum.Font.SourceSansBold
+Title.Text = "Sky Hub"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 16
 
-_G.SkyCampEnabled = true
-_G.StickyKillEnabled = false
-_G.DesyncEnabled = false
-_G.WallbangEnabled = false
+FlyBtn.Name = "FlyBtn"
+FlyBtn.Parent = MainFrame
+FlyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+FlyBtn.Position = UDim2.new(0, 10, 0, 40)
+FlyBtn.Size = UDim2.new(1, -20, 0, 30)
+FlyBtn.Font = Enum.Font.SourceSans
+FlyBtn.Text = "Fly: OFF"
+FlyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+FlyBtn.TextSize = 14
 
-local skyHeight = 10000
-local attacking = false
-local currentTarget = nil
-local stickyConn = nil
-local skyConn = nil
-local touchDown = false
+NoclipBtn.Name = "NoclipBtn"
+NoclipBtn.Parent = MainFrame
+NoclipBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+NoclipBtn.Position = UDim2.new(0, 10, 0, 75)
+NoclipBtn.Size = UDim2.new(1, -20, 0, 30)
+NoclipBtn.Font = Enum.Font.SourceSans
+NoclipBtn.Text = "Noclip: OFF"
+NoclipBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+NoclipBtn.TextSize = 14
 
-repeat task.wait() until game:IsLoaded()
+SpeedInput.Name = "SpeedInput"
+SpeedInput.Parent = MainFrame
+SpeedInput.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+SpeedInput.Position = UDim2.new(0, 10, 0, 110)
+SpeedInput.Size = UDim2.new(1, -20, 0, 30)
+SpeedInput.Font = Enum.Font.SourceSans
+SpeedInput.Text = "50"
+SpeedInput.PlaceholderText = "Fly Speed..."
+SpeedInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpeedInput.TextSize = 14
 
--- AUTO SPIN BOT (slower, less flinging, still dodgy)
-local spinConn
-local function doSpin()
-    if spinConn then return end
-    spinConn = RunService.RenderStepped:Connect(function(dt)
-        local char = lp.Character
-        if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-        local root = char.HumanoidRootPart
-        
-        local cf = root.CFrame
-        root.CFrame = cf * CFrame.Angles(0, math.rad(14) * dt * 45, 0)  -- slower spin
-        
-        -- Light jitter only (dodge without flinging)
-        root.CFrame = root.CFrame * CFrame.new(math.random(-6,6)/140, math.random(-3,3)/140, math.random(-6,6)/140)
-    end)
-end
-doSpin()
+CloseBtn.Name = "CloseBtn"
+CloseBtn.Parent = MainFrame
+CloseBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+CloseBtn.Position = UDim2.new(1, -25, 0, 5)
+CloseBtn.Size = UDim2.new(0, 20, 0, 20)
+CloseBtn.Font = Enum.Font.SourceSansBold
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 14
 
--- BROKEN BODY (kept same as you wanted)
-local broken = false
-local function fuckMyBody()
-    if broken then return end
-    broken = true
-    local char = lp.Character
-    if not char then return end
-    
-    task.spawn(function()
-        while broken and char.Parent do
-            pcall(function()
-                local head = char:FindFirstChild("Head")
-                local root = char:FindFirstChild("HumanoidRootPart")
-                if head and root then
-                    local neck = head:FindFirstChild("Neck") or head:FindFirstChildWhichIsA("Motor6D")
-                    if neck then
-                        neck.C0 = neck.C0 * CFrame.Angles(math.rad(180), 0, 0)
-                    end
-                end
-                
-                for _, part in pairs(char:GetChildren()) do
-                    if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-                        local motor = part:FindFirstChildWhichIsA("Motor6D")
-                        if motor then
-                            motor.C0 = motor.C0 * CFrame.new(math.random(-2,2), math.random(-3,3), math.random(-2,2))
-                            motor.C1 = motor.C1 * CFrame.Angles(math.rad(math.random(-90,90)), math.rad(math.random(-60,60)), math.rad(math.random(-45,45)))
-                        end
-                    end
-                end
-            end)
-            task.wait(0.4)
-        end
-    end)
-end
-fuckMyBody()
+OpenBtn.Name = "OpenBtn"
+OpenBtn.Parent = ScreenGui
+OpenBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+OpenBtn.Position = UDim2.new(0, 10, 0, 10)
+OpenBtn.Size = UDim2.new(0, 50, 0, 30)
+OpenBtn.Font = Enum.Font.SourceSansBold
+OpenBtn.Text = "Open"
+OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenBtn.TextSize = 14
+OpenBtn.Visible = false
 
--- STICKY KILL (10-15 studs above)
-local function startStick()
-    if stickyConn then return end
-    stickyConn = RunService.RenderStepped:Connect(function()
-        if not _G.StickyKillEnabled or not attacking or not currentTarget then
-            if stickyConn then stickyConn:Disconnect() stickyConn = nil end
-            return
-        end
-        local myChar = lp.Character
-        if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return end
-        local myRoot = myChar.HumanoidRootPart
-        
-        if currentTarget.Character and currentTarget.Character:FindFirstChild("HumanoidRootPart") then
-            local eRoot = currentTarget.Character.HumanoidRootPart
-            local eHum = currentTarget.Character:FindFirstChildOfClass("Humanoid")
-            if eHum and eHum.Health > 0 then
-                local rx = math.random(-12,12)/10
-                local rz = math.random(-12,12)/10
-                myRoot.CFrame = eRoot.CFrame * CFrame.new(rx, 12, rz)  -- 10-15 studs above
-                
-                for _ = 1, 2 do
-                    local vel = Instance.new("BodyVelocity")
-                    vel.MaxForce = Vector3.new(6e9, 6e9, 6e9)
-                    vel.Velocity = (eRoot.Position - myRoot.Position) * 55
-                    vel.Parent = myRoot
-                    game:GetService("Debris"):AddItem(vel, 0.07)
-                end
-            end
-        end
-    end)
-end
+local flying = false
+local noclip = false
+local flySpeed = 50
+local bv, bg
 
-local function stopStick()
-    attacking = false
-    currentTarget = nil
-    if stickyConn then stickyConn:Disconnect() stickyConn = nil end
-end
-
--- Teleport (closer, above bias ~15 studs random)
-local function doTeleport()
-    local targets = {}
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= lp and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-            local h = p.Character:FindFirstChildOfClass("Humanoid")
-            if h and h.Health > 0 then table.insert(targets, p) end
-        end
-    end
-    
-    local myChar = lp.Character
-    if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return end
-    local myRoot = myChar.HumanoidRootPart
-    
-    if #targets > 0 then
-        local tgt = targets[math.random(#targets)]
-        local tRoot = tgt.Character.HumanoidRootPart
-        local off = Vector3.new(math.random(-180,180), math.random(140,280), math.random(-180,180))
-        myRoot.CFrame = tRoot.CFrame * CFrame.new(off)
-    else
-        myRoot.CFrame = CFrame.new(math.random(-1400,1400), skyHeight + 250, math.random(-1400,1400))
-    end
-end
-
--- Sky camp
-local function skyLoop()
-    if skyConn then return end
-    skyConn = RunService.Heartbeat:Connect(function()
-        if not _G.SkyCampEnabled or touchDown then return end
-        local char = lp.Character
-        if char and char:FindFirstChild("HumanoidRootPart") then
-            local r = char.HumanoidRootPart
-            r.AssemblyLinearVelocity = Vector3.zero
-            r.CFrame = CFrame.new(r.Position.X, skyHeight, r.Position.Z)
-        end
-    end)
-end
-
-local function onPress(input, gp)
-    if gp then return end
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        touchDown = true
-        _G.SkyCampEnabled = false
-        doTeleport()
-        if _G.StickyKillEnabled then
-            currentTarget = getClosest()
-            if currentTarget then
-                attacking = true
-                startStick()
-            end
-        end
-    end
-end
-
-local function onRelease(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        touchDown = false
-        stopStick()
-        _G.SkyCampEnabled = true
-    end
-end
-
-UserInputService.InputBegan:Connect(onPress)
-UserInputService.InputEnded:Connect(onRelease)
-UserInputService.TouchStarted:Connect(onPress)
-UserInputService.TouchEnded:Connect(onRelease)
-
--- Main heartbeat
-RunService.Heartbeat:Connect(function()
-    local char = lp.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-    
-    if _G.DesyncEnabled then
-        local r = char.HumanoidRootPart
-        local ov = r.AssemblyLinearVelocity
-        r.AssemblyLinearVelocity = Vector3.new(math.random(-180,180), math.random(-180,180), math.random(-180,180))
-        task.wait(0.018)
-        r.AssemblyLinearVelocity = ov
-    end
-    
-    if _G.SkyCampEnabled and not touchDown then
-        skyLoop()
-    end
+CloseBtn.MouseButton1Click:Connect(function()
+	MainFrame.Visible = false
+	OpenBtn.Visible = true
 end)
 
-function getClosest()
-    local best, bestDist = nil, 9999
-    local m = lp:GetMouse()
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= lp and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-            local hum = p.Character:FindFirstChildOfClass("Humanoid")
-            if hum and hum.Health > 0 and (not p.Team or p.Team ~= lp.Team) then
-                local pos, vis = cam:WorldToViewportPoint(p.Character.HumanoidRootPart.Position)
-                if vis then
-                    local d = (Vector2.new(pos.X, pos.Y) - Vector2.new(m.X, m.Y)).Magnitude
-                    if d < bestDist and d < 280 then
-                        best, bestDist = p, d
-                    end
-                end
-            end
-        end
-    end
-    return best
-end
+OpenBtn.MouseButton1Click:Connect(function()
+	MainFrame.Visible = true
+	OpenBtn.Visible = false
+end)
 
-local function doWallbang()
-    if not _G.WallbangEnabled then return end
-    print("wallbang mode active")
-end
+SpeedInput.FocusLost:Connect(function()
+	local num = tonumber(SpeedInput.Text)
+	if num then flySpeed = num else SpeedInput.Text = tostring(flySpeed) end
+end)
 
--- CLEANER BETTER GUI
-local sg = Instance.new("ScreenGui")
-sg.Name = "SkyHubV8"
-sg.ResetOnSpawn = false
-pcall(function() sg.Parent = CoreGui end)
-if not sg.Parent then sg.Parent = lp:WaitForChild("PlayerGui") end
+RunService.Stepped:Connect(function()
+	if noclip and LocalPlayer.Character then
+		for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
+			if v:IsA("BasePart") and v.CanCollide then
+				v.CanCollide = false
+			end
+		end
+	end
+end)
 
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 200, 0, 280)
-frame.Position = UDim2.new(0.02, 0, 0.2, 0)
-frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-frame.BorderSizePixel = 0
-frame.Active = true
-frame.Draggable = true
-frame.Parent = sg
-
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 8)
-corner.Parent = frame
-
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1,0,0,40)
-title.BackgroundTransparency = 1
-title.Text = "NOSKILL HUB V8"
-title.TextColor3 = Color3.fromRGB(255, 100, 100)
-title.Font = Enum.Font.GothamBold
-title.TextSize = 16
-title.Parent = frame
-
-local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0, 8)
-layout.SortOrder = Enum.SortOrder.LayoutOrder
-layout.Parent = frame
-
-local function makeBtn(txt, order, var)
-    local b = Instance.new("TextButton")
-    b.Size = UDim2.new(0.9,0,0,42)
-    b.BackgroundColor3 = Color3.fromRGB(35,35,35)
-    b.Text = txt .. ": OFF"
-    b.TextColor3 = Color3.fromRGB(255, 80, 80)
-    b.Font = Enum.Font.GothamSemibold
-    b.TextSize = 14
-    b.LayoutOrder = order
-    b.Parent = frame
-    
-    local uiCorner = Instance.new("UICorner")
-    uiCorner.CornerRadius = UDim.new(0, 6)
-    uiCorner.Parent = b
-    
-    local on = false
-    b.MouseButton1Click:Connect(function()
-        on = not on
-        _G[var] = on
-        if on then
-            b.BackgroundColor3 = Color3.fromRGB(60, 100, 60)
-            b.TextColor3 = Color3.fromRGB(120, 255, 140)
-            b.Text = txt .. ": ON"
-            if var == "WallbangEnabled" then doWallbang() end
-        else
-            b.BackgroundColor3 = Color3.fromRGB(35,35,35)
-            b.TextColor3 = Color3.fromRGB(255, 80, 80)
-            b.Text = txt .. ": OFF"
-        end
-    end)
-end
-
-makeBtn("Sky Camp", 1, "SkyCampEnabled")
-makeBtn("Sticky Kill", 2, "StickyKillEnabled")
-makeBtn("Desync", 3, "DesyncEnabled")
-makeBtn("Wallbang", 4, "WallbangEnabled")
-
-print("NOSKILL HUB V8 Loaded - Clean Edition")
-
-BypassAntiCheat()
+FlyBtn.MouseButton1Click:Connect(function()
+	local char = LocalPlayer.Character
+	if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+	local hrp = char.HumanoidRootPart
+	
+	flying = not flying
+	FlyBtn.Text = "Fly: " .. (flying and "ON" or "OFF")
+	FlyBtn.BackgroundColor3 = flying and Color3.fromRGB(0, 120, 0) or Color3.fromRGB(40, 40, 40)
+	
+	if flying then
+		bg = Instance.new("BodyGyro")
+		bg.P = 9e4
+		bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+		bg.cframe = hrp.CFrame
+		bg.Parent = hrp
+		
+		bv = Instance.new("BodyVelocity")
+		bv.velocity = Vector3.new(0, 0.1, 0)
+		bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
+		bv.Parent = hrp
+		
+		char.Humanoid.PlatformStand = true
+		
+		task.spawn(function()
+			while flying and char and hrp do
+				local cam = workspace.CurrentCamera
+				local moveDir = char.Humanoid.MoveDirection
+				
+				if moveDir.Magnitude > 0 then
+					bv.velocity = cam.CFrame:VectorToWorldSpace(Vector3.new(moveDir.X, 0, moveDir.Z * 1.5)).Unit * flySpeed
+				else
+					bv.velocity = Vector3.new(0, 0.1, 0)
+				end
+				bg.cframe = cam.CFrame
+				RunService.RenderStepped:Wait()
+			end
+		end)
+	else
+		if bg then bg:Destroy() end
+		if bv then bv:Destroy() end
+		if char:FindFirstChild("Humanoid") then
+			char.Humanoid.PlatformStand = false
+		end
+	end
+end)
